@@ -11,8 +11,9 @@
   Options:
     -save-logs: Save the log messages to a file with the client IP address as the filename
 
-  Author: Mohamed Abouelwafa
-  v1.0: 20231102
+  Author:
+    Mohamed Abouelwafa
+    v1.0: 20231102
 """
 
 import os
@@ -42,6 +43,7 @@ class SyslogHandler(socketserver.BaseRequestHandler):
     if args.save_logs:
       with open(f"{ip_address}.log", "a") as f:
         f.write(data + "\n")
+
 
   def get_new_color(self) -> str:
     """ Get a new color for a new client
