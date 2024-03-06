@@ -6,14 +6,17 @@
   By default, the Syslog Server will print the log messages to stdout.
 
   Usage:
-    python3 syslog-server.py [-save-logs]
+    python3 syslog-server.py [-save-logs] [-p PORT] [-filter IP_ADDRESS]
 
   Options:
     -save-logs: Save the log messages to a file with the client IP address as the filename
+    -p PORT: Use a different port other than the default port 514
+    -filter IP_ADDRESS: Filter the output on the screen by IP
 
   Author:
     Mohamed Abouelwafa
     v1.0: 20231102
+    v1.1: 20240306
 """
 
 import os
@@ -37,7 +40,12 @@ class SyslogHandler(socketserver.BaseRequestHandler):
       self.client_colors[ip_address] = self.get_new_color()
 
     # Print the log message to stdout
-    print("{}{}\033[0m: {}".format(self.client_colors[ip_address], ip_address, data))
+    if filter_ip and filter_ip == ip_address:
+      # Only print the log message if the IP address matches the filter
+      print("{}{}\033[0m: {}".format(self.client_colors[ip_address], ip_address, data))
+    elif not filter_ip:
+      # If no filter is provided, print all the log messages
+      print("{}{}\033[0m: {}".format(self.client_colors[ip_address], ip_address, data))
 
     # If -save-logs command line argument is provided
     # Write the log message to a log file with the client IP address as the filename
@@ -56,6 +64,7 @@ class SyslogHandler(socketserver.BaseRequestHandler):
 if __name__ == '__main__':
   # Parse command line arguments
   parser = argparse.ArgumentParser(description='Simple Syslog Server')
+  parser.add_argument('-filter', action='store', help='Filter the output on the screen by IP')
   parser.add_argument('-save-logs', action='store_true', help='Save the log messages to a file')
   parser.add_argument('-p', action='store', type=int,
                       help='Use a different port other than the default port 514')
@@ -65,6 +74,8 @@ if __name__ == '__main__':
   port = args.p if args.p else 514
   # Local IP address
   local_ip = ''
+  # Filter IP
+  filter_ip = args.filter
 
   os.system('clear')
   # Get the machine local IP address
