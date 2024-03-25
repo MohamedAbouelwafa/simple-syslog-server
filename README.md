@@ -17,6 +17,8 @@ python3 syslog-server.py [-h] [-save-logs] [-p <port_number>]
 * Use a specific port with the value <port_number>
 * Otherwise, the default port 514 will be used
 * Type: **integer**
+### -filter <IP_Address>
+* Filter the output on the screen by IP
 
 Log files will be saved under the same directory where you downloaded the script.
 
