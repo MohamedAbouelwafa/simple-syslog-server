@@ -42,14 +42,13 @@ class SyslogHandler(socketserver.BaseRequestHandler):
     if filter_ip and filter_ip == ip_address:
       # Only print the log message if the IP address matches the filter
       self.print_to_stdout(ip_address, data)
-      if args.save_logs:
-        self.print_to_file(ip_address, data)
 
     elif not filter_ip:
       # If no filter is provided, print all the log messages
       self.print_to_stdout(ip_address, data)
-      if args.save_logs:
-        self.print_to_file(ip_address, data)
+
+    if args.save_logs:
+      self.print_to_file(ip_address, data)
 
 
   def print_to_stdout(self, ip_address, data):
@@ -75,10 +74,10 @@ class SyslogHandler(socketserver.BaseRequestHandler):
 if __name__ == '__main__':
   # Parse command line arguments
   parser = argparse.ArgumentParser(description='Simple Syslog Server')
-  parser.add_argument('-filter', action='store', help='Filter the output on the screen by IP')
-  parser.add_argument('-save-logs', action='store_true', help='Save the log messages to a file')
   parser.add_argument('-p', action='store', type=int,
                       help='Use a different port other than the default port 514')
+  parser.add_argument('-filter', action='store', help='Filter the output on the screen by IP')
+  parser.add_argument('-save-logs', action='store_true', help='Save the log messages to a file')
   args = parser.parse_args()
 
   # Default port
@@ -101,7 +100,7 @@ if __name__ == '__main__':
   try:
     print('Syslog server: {} listening on port: {}\n'.format(local_ip, port))
     if filter_ip:
-      print("filtering for IP: {}\033[0m".format(client_colors[filter_ip]))
+      print("filtering for IP: {}\n".format(filter_ip))
     server = socketserver.UDPServer(('0.0.0.0', port), SyslogHandler)
     server.serve_forever(poll_interval=0.5)
 
