@@ -1,7 +1,8 @@
+#!/usr/bin/python3
 """ Simple Syslog Server
 
   This script will run a simple Syslog Server locally on the machine.
-  The Syslog Server listens on port 514 for incoming Syslog messages from different clients.
+  The Syslog Server listens on port 514, by default, for incoming Syslog messages from different clients.
 
   By default, the Syslog Server will print the log messages to stdout.
 
@@ -12,21 +13,29 @@
     -save-logs: Save the log messages to a file with the client IP address as the filename
     -p PORT: Use a different port other than the default port 514
     -filter IP_ADDRESS: Filter the output on the screen by IP
+    -backup-count: The number of backup log files to keep (default is 20)
 
   Author:
     Mohamed Abouelwafa
+
+  Version history:
     v1.0: 20231102
     v1.1: 20240306
+    v2.0: 20240426  Use logging module to save logs to files with rotating file handler
 """
+
 
 import os
 import socketserver
 import argparse
 import socket
+import logging
+from logging.handlers import RotatingFileHandler
 
 # Used to assign a different color for each client
 colors = ['\033[33m', '\033[36m', '\033[32m', '\033[35m', '\033[34m', '\033[31m', ]
 client_colors = {}
+client_loggers = {}
 
 class SyslogHandler(socketserver.BaseRequestHandler):
 
@@ -48,7 +57,9 @@ class SyslogHandler(socketserver.BaseRequestHandler):
       self.print_to_stdout(ip_address, data)
 
     if args.save_logs:
-      self.print_to_file(ip_address, data)
+      backup_count = args.backup_count if args.backup_count else 20
+      self.setup_logger(ip_address, backup_count)
+      client_loggers[ip_address].info(data)
 
 
   def print_to_stdout(self, ip_address, data):
@@ -57,11 +68,15 @@ class SyslogHandler(socketserver.BaseRequestHandler):
     print("{}{}\033[0m: {}".format(client_colors[ip_address], ip_address, data))
 
 
-  def print_to_file(self, ip_address, data):
-    """ Write the log message to a log file with the client IP address as the filename
+  def setup_logger(self, ip_address, backup_count=20):
+    """ Setup a logger for each client IP address
     """
-    with open(f"{ip_address}.log", "a") as f:
-      f.write(data + "\n")
+    if ip_address not in client_loggers:
+      logger = logging.getLogger(ip_address)
+      logger.setLevel(logging.INFO)
+      handler = RotatingFileHandler(f"{ip_address}.log", maxBytes=10 * 1024 * 1024, backupCount=backup_count)
+      logger.addHandler(handler)
+      client_loggers[ip_address] = logger
 
 
   def get_new_color(self) -> str:
@@ -78,6 +93,7 @@ if __name__ == '__main__':
                       help='Use a different port other than the default port 514')
   parser.add_argument('-filter', action='store', help='Filter the output on the screen by IP')
   parser.add_argument('-save-logs', action='store_true', help='Save the log messages to a file')
+  parser.add_argument('-backup-count', action='store', help='The number of backup files to keep')
   args = parser.parse_args()
 
   # Default port
