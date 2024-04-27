@@ -4,6 +4,7 @@
 
 # Ignore log files
 *.log
+*.log.*
 /logs
 
 # Ignore system files
